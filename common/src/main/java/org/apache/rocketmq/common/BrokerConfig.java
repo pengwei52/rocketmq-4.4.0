@@ -32,8 +32,8 @@ public class BrokerConfig {
     @ImportantField
     private String namesrvAddr = System.getProperty(MixAll.NAMESRV_ADDR_PROPERTY, System.getenv(MixAll.NAMESRV_ADDR_ENV));
     @ImportantField
-    private String brokerIP1 = RemotingUtil.getLocalAddress();
-    private String brokerIP2 = RemotingUtil.getLocalAddress();
+    private String brokerIP1 = RemotingUtil.getLocalAddress();	// 当前broker监听的IP，防止多网卡时无法获取到正确的IP
+    private String brokerIP2 = RemotingUtil.getLocalAddress();	// 存在broker主从时，在broker主节点上配置了brokerIP2的话,broker从节点会连接主节点配置的brokerIP2来同步数据。
     @ImportantField
     private String brokerName = localHostName();
     @ImportantField
@@ -153,6 +153,7 @@ public class BrokerConfig {
      * This configurable item defines interval of topics registration of broker to name server. Allowing values are
      * between 10, 000 and 60, 000 milliseconds.
      */
+    // 此可配置项定义Broker到NameServer的主题注册间隔。允许的值在10,000到60,000毫秒之间。
     private int registerNameServerPeriod = 1000 * 30;
 
     /**

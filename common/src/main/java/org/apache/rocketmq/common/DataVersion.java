@@ -19,6 +19,10 @@ package org.apache.rocketmq.common;
 import java.util.concurrent.atomic.AtomicLong;
 import org.apache.rocketmq.remoting.protocol.RemotingSerializable;
 
+/**
+ * Broker 定时向 NameServer 上报 Broker 的信息，那每次Broker都携带信息过来，NameServer 每次都会更新效率不是很低？
+ * 每次有topic更新，从Broker传过来的dataVersion都会+1。
+ */
 public class DataVersion extends RemotingSerializable {
     private long timestamp = System.currentTimeMillis();
     private AtomicLong counter = new AtomicLong(0);

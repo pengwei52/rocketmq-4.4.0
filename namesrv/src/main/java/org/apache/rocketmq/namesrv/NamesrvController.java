@@ -38,7 +38,13 @@ import org.apache.rocketmq.remoting.netty.NettyServerConfig;
 import org.apache.rocketmq.remoting.netty.TlsSystemConfig;
 import org.apache.rocketmq.srvutil.FileWatchService;
 
-
+/**
+ * NameServer的功能：
+ * 1、每个Broker启动的时候会向Namesrv发送注册请求，Namesrv接收Broker的请求注册路由信息，NameServer保存活跃的broker列表，包括Master和Slave；
+ * 2、用来保存所有topic和该topic所有队列的列表；
+ * 3、NameServer用来保存所有broker的Filter列表
+ * 4、接收client（Producer和Consumer）的请求根据某个topic获取所有到broker的路由信息；
+ */
 public class NamesrvController {
     private static final InternalLogger log = InternalLoggerFactory.getLogger(LoggerName.NAMESRV_LOGGER_NAME);
 
@@ -48,9 +54,12 @@ public class NamesrvController {
 
     private final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor(new ThreadFactoryImpl(
         "NSScheduledThread"));
+    // KV配置管理器
     private final KVConfigManager kvConfigManager;
+    // 路由信息管理器
     private final RouteInfoManager routeInfoManager;
 
+    // NettyServer
     private RemotingServer remotingServer;
 
     private BrokerHousekeepingService brokerHousekeepingService;
@@ -73,17 +82,26 @@ public class NamesrvController {
         this.configuration.setStorePathFromConfig(this.namesrvConfig, "configStorePath");
     }
 
+    /**
+     * 初始化
+     * @return
+     */
     public boolean initialize() {
 
+    	// 加载KV配置
         this.kvConfigManager.load();
 
+        // 创建网络通信处理对象
         this.remotingServer = new NettyRemotingServer(this.nettyServerConfig, this.brokerHousekeepingService);
 
+        // 业务线程池
         this.remotingExecutor =
             Executors.newFixedThreadPool(nettyServerConfig.getServerWorkerThreads(), new ThreadFactoryImpl("RemotingExecutorThread_"));
 
+        // 注册服务端消息处理器
         this.registerProcessor();
 
+        // NameServer 每隔10s扫描一次Broker状态信息表，移除处于不激活状态的Broker
         this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
 
             @Override
@@ -92,6 +110,7 @@ public class NamesrvController {
             }
         }, 5, 10, TimeUnit.SECONDS);
 
+        // NameServer 每个10分钟打印一次KV配置
         this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
 
             @Override
@@ -141,6 +160,9 @@ public class NamesrvController {
         return true;
     }
 
+    /**
+     * 注册消息处理器
+     */
     private void registerProcessor() {
         if (namesrvConfig.isClusterTest()) {
 
@@ -152,6 +174,10 @@ public class NamesrvController {
         }
     }
 
+    /**
+     * 启动
+     * @throws Exception
+     */
     public void start() throws Exception {
         this.remotingServer.start();
 

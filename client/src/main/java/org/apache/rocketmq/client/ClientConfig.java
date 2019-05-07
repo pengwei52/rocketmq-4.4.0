@@ -27,15 +27,22 @@ import org.apache.rocketmq.remoting.protocol.LanguageCode;
  */
 public class ClientConfig {
     public static final String SEND_MESSAGE_WITH_VIP_CHANNEL_PROPERTY = "com.rocketmq.sendMessageWithVIPChannel";
+    // NameServer 地址
     private String namesrvAddr = System.getProperty(MixAll.NAMESRV_ADDR_PROPERTY, System.getenv(MixAll.NAMESRV_ADDR_ENV));
+    // 客户端IP
     private String clientIP = RemotingUtil.getLocalAddress();
+    // 实例名称
     private String instanceName = System.getProperty("rocketmq.client.name", "DEFAULT");
+    // Callback回调执行线程数
     private int clientCallbackExecutorThreads = Runtime.getRuntime().availableProcessors();
     /**
+     * 从NameServer中提取主题信息的时间间隔。</p>
+     * 
      * Pulling topic information interval from the named server
      */
     private int pollNameServerInterval = 1000 * 30;
     /**
+     * Broker的心跳间隔(以微秒为单位)。</p>
      * Heartbeat interval in microseconds with message broker
      */
     private int heartbeatBrokerInterval = 1000 * 30;
@@ -51,6 +58,10 @@ public class ClientConfig {
 
     private LanguageCode language = LanguageCode.JAVA;
 
+    /**
+     * 构建客户端唯一编号。 ip@instanceName[@unitName]
+     * @return
+     */
     public String buildMQClientId() {
         StringBuilder sb = new StringBuilder();
         sb.append(this.getClientIP());
@@ -82,6 +93,7 @@ public class ClientConfig {
     }
 
     public void changeInstanceNameToPID() {
+    	// 如果instance为默认值的话，会自动将instance设置为进程ID，这就就避免了同一台机器启动多个应用程序导致clientId重复的问题。
         if (this.instanceName.equals("DEFAULT")) {
             this.instanceName = String.valueOf(UtilAll.getPid());
         }

@@ -26,6 +26,7 @@ public class ThreadLocalIndex {
     public int getAndIncrement() {
         Integer index = this.threadLocalIndex.get();
         if (null == index) {
+        	// 返回int型绝对值
             index = Math.abs(random.nextInt());
             if (index < 0)
                 index = 0;
